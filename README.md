@@ -26,6 +26,6 @@ This is supposed to be more lenient multiplayer hardcore mode.
 
  - Add feature for changing weather or not this mod has effect in a world.
  - Add a way to self-revive if all players are dead.
- - Add a config file for whether or not a player drops their head.
- - Add a config file for whether or not a player's head can be created with paper and a skull.
- - Add a config file for whether or not self-revive is enabled.
+ - Add a config file for whether a player drops their head.
+ - Add a config file for whether a player's head can be created with paper and a skull.
+ - Add a config file for whether self-revive is enabled.
