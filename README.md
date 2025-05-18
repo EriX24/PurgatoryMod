@@ -9,6 +9,7 @@ Adds a unique way to respawn when you die in Minecraft!
 When you die you will now drop a player head, as well as being put in spectator mode.
 
 **Respawning**
+
 When you right-click the players head with a golden apple, the apple will be used to revive the player
 
 **Inventory Unrecoverable**
