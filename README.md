@@ -29,3 +29,11 @@ This is supposed to be more lenient multiplayer hardcore mode.
  - Add a config file for whether a player drops their head.
  - Add a config file for whether a player's head can be created with paper and a skull.
  - Add a config file for whether self-revive is enabled.
+
+**Changelog**
+
+ - 1.0.1: Patched dimensional warps
+
+**Bugs**
+
+ - Dimensional warps: when you die or get revived in the nether or end (end is only bugged for revival), you will revive in the overworld [PATCHED IN 1.0.1]
