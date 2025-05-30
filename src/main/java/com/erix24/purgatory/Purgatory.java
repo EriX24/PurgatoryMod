@@ -153,7 +153,7 @@ public class Purgatory {
                             String targetedPlayerName = skullOwner.get("Name").getAsString();
                             ServerPlayer targetedPlayer = minecraftServer.getPlayerList().getPlayerByName(targetedPlayerName);
 
-                            if (targetedPlayer != null) {  // && !player.getName().getString().equals(targetedPlayerName) [Add back later]
+                            if (targetedPlayer != null && player != targetedPlayer) {  // && !player.getName().getString().equals(targetedPlayerName) [Add back later]
                                 if (targetedPlayer.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) { // Change back the GameType.SPECTATOR later
                                     if (targetedPlayer.level().dimension() != player.level().dimension()) {
                                         ResourceKey<Level> dimension = player.level().dimension();
