@@ -6,9 +6,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -75,10 +77,12 @@ public class Purgatory {
         public static void onPlayerDeath(LivingDeathEvent event) {
             Entity entity = event.getEntity();
             MinecraftServer minecraftServer = entity.level().getServer();
+            System.out.println(minecraftServer);
             if (minecraftServer != null) {
                 if (!minecraftServer.isHardcore()) {
                     // Check if the entity that died is a player
                     if (entity instanceof Player) {
+                        LOGGER.debug("Player died");
                         ServerPlayer player = (ServerPlayer) entity;
                         player.setLastDeathLocation(Optional.of(GlobalPos.of(event.getEntity().level().dimension(), event.getEntity().blockPosition())));
 
@@ -90,8 +94,18 @@ public class Purgatory {
                         playerHead.setTag(nbt);
 
                         player.level().addFreshEntity(new ItemEntity(player.level(), player.getX() + 0.5, player.getY(), player.getZ() + 0.5, playerHead));
+
+                        // HACK ALERT
+                        player.setRespawnPosition(entity.level().dimension(), null, player.getYRot(), true, false);
+                        player.setRespawnPosition(entity.level().dimension(), new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()), player.getYRot(), true, false);
+
+
+                        LOGGER.debug("Set the respawn point for {} to {}", player.getName(), player.getRespawnPosition().toString());
+                        LOGGER.debug(player.getRespawnDimension().toString());
                     }
                 }
+            } else {
+                System.out.println(event.getEntity());
             }
 
         }
@@ -99,17 +113,22 @@ public class Purgatory {
         // Player Respawns
         @SubscribeEvent
         public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+//            LOGGER.debug(((ServerPlayer) event.getEntity()).getRespawnPosition().toString());
             Entity entity = event.getEntity();
             MinecraftServer minecraftServer = entity.level().getServer();
+            Level level = event.getEntity().level();
             if (minecraftServer != null) {
                 if (!minecraftServer.isHardcore()) {
                     Player player = event.getEntity();
                     ServerPlayer serverPlayer = (ServerPlayer) player;
                     serverPlayer.setGameMode(GameType.SPECTATOR);
 
-                    player.teleportTo(player.getLastDeathLocation().get().pos().getX() + 0.5,
-                            player.getLastDeathLocation().get().pos().getY(),
-                            player.getLastDeathLocation().get().pos().getZ() + 0.5);
+//                    ResourceKey<Level> dimension = player.level().dimension();
+//                    ServerLevel $$5 = ((ServerLevel)level).getServer().getLevel(dimension);
+//
+//                    player.teleportTo(player.getLastDeathLocation().get().pos().getX() + 0.5,
+//                            player.getLastDeathLocation().get().pos().getY(),
+//                            player.getLastDeathLocation().get().pos().getZ() + 0.5);
 
                 }
             }
@@ -120,10 +139,13 @@ public class Purgatory {
             Entity entity = event.getEntity();
             Level level = event.getLevel();
             MinecraftServer minecraftServer = entity.level().getServer();
+
             if (minecraftServer != null) {
                 if (!minecraftServer.isHardcore()) {
                     Block targetedBlock = level.getBlockState(event.getPos()).getBlock();
                     Player player = event.getEntity();
+                    ServerPlayer serverPlayer = minecraftServer.getPlayerList().getPlayerByName(player.getName().getString());
+
                     if (targetedBlock == Blocks.PLAYER_HEAD || targetedBlock == Blocks.PLAYER_WALL_HEAD) {
                         CompoundTag nbt = level.getBlockEntity(event.getPos()).saveWithoutMetadata();
                         CompoundTag skullOwner = (CompoundTag) nbt.get("SkullOwner");
@@ -131,20 +153,31 @@ public class Purgatory {
                             String targetedPlayerName = skullOwner.get("Name").getAsString();
                             ServerPlayer targetedPlayer = minecraftServer.getPlayerList().getPlayerByName(targetedPlayerName);
 
-                            if (targetedPlayer != null && !player.getName().getString().equals(targetedPlayerName)) {  //  [Add back later]
+                            if (targetedPlayer != null) {  // && !player.getName().getString().equals(targetedPlayerName) [Add back later]
                                 if (targetedPlayer.gameMode.getGameModeForPlayer() == GameType.SPECTATOR) { // Change back the GameType.SPECTATOR later
+                                    if (targetedPlayer.level().dimension() != player.level().dimension()) {
+                                        ResourceKey<Level> dimension = player.level().dimension();
+                                        ServerLevel $$5 = ((ServerLevel)level).getServer().getLevel(dimension);
+
+                                        LOGGER.debug(targetedPlayer.level().dimension().toString());
+                                        LOGGER.debug(player.level().dimension().toString());
+
+                                        targetedPlayer.changeDimension($$5);
+                                    }
                                     if (player.getMainHandItem().getItem() == Items.GOLDEN_APPLE) {
                                         player.getMainHandItem().shrink(1);
+
                                         if (level.getBlockState(new BlockPos(event.getPos().getX(), event.getPos().getY() + 1, event.getPos().getZ())).isAir()) {
                                             targetedPlayer.teleportTo(event.getPos().getX() + 0.5, event.getPos().getY(), event.getPos().getZ() + 0.5);
                                         } else {
                                             targetedPlayer.teleportTo(event.getPos().getX() + 0.5, event.getPos().getY() - 1, event.getPos().getZ() + 0.5);
                                         }
-                                        targetedPlayer.level().removeBlock(event.getPos(), true);
+                                        player.level().removeBlock(event.getPos(), true);
                                         targetedPlayer.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60 * 20, 3));
                                         targetedPlayer.addEffect(new MobEffectInstance(MobEffects.HUNGER, 20 * 20));
                                         targetedPlayer.getFoodData().setFoodLevel(3 * 2);
                                         targetedPlayer.setGameMode(GameType.SURVIVAL);
+
                                         ServerLevel serverLevel = (ServerLevel) level;
                                         serverLevel.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
                                                 targetedPlayer.getX(), targetedPlayer.getY() + 1.5, targetedPlayer.getZ(),
