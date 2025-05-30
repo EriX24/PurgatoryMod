@@ -33,7 +33,9 @@ This is supposed to be more lenient multiplayer hardcore mode.
 **Changelog**
 
  - 1.0.1: Patched dimensional warps
+ - 1.0.2: Patched my own bug D: (Self revival)
 
 **Bugs**
 
- - Dimensional warps: when you die or get revived in the nether or end (end is only bugged for revival), you will revive in the overworld [PATCHED IN 1.0.1]
+ - Dimensional warps - when you die or get revived in the nether or end (end is only bugged for revival), you will revive in the overworld [1.0.0 - PATCHED 1.0.1]
+ - Self revival - when you right-click your own placed head in spectator to revive yourself [1.0.1 - PATCHED 1.0.2] 
